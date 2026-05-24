@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String        @unique
+  password     String
+  role         String        @default("user")
+  createdAt    DateTime      @default(now())
+  events       Event[]
+  reservations Reservation[]
+  attendingEvents EventAttendee[]
+}
+
+model Event {
+  id          Int            @id @default(autoincrement())
+  title       String
+  description String?
+  date        DateTime?
+  location    String?
+  ownerId     Int
+  createdAt   DateTime       @default(now())
+  owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  gifts       Gift[]
+  invitation  Invitation?
+  attendees   EventAttendee[]
+}
+
+model Gift {
+  id          Int          @id @default(autoincrement())
+  name        String
+  image       String?
+  price       String?
+  url         String?
+  status      String       @default("available")
+  eventId     Int
+  createdAt   DateTime     @default(now())
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reservation Reservation?
+}
+
+model Invitation {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  eventId   Int      @unique
+  createdAt DateTime @default(now())
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model EventAttendee {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  eventId   Int
+  joinedAt  DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+}
+
+model Reservation {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  giftId    Int      @unique
+  eventId   Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gift      Gift     @relation(fields: [giftId], references: [id], onDelete: Cascade)
+}
