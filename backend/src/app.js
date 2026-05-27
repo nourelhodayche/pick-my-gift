@@ -7,11 +7,14 @@ const eventRoutes = require('./routes/event.routes')
 const giftRoutes = require('./routes/gift.routes')
 const invitationRoutes = require('./routes/invitation.routes')
 const reservationRoutes = require('./routes/reservation.routes')
+const passport = require('./config/passport')
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
+
+app.use(passport.initialize())
 
 app.use('/api/auth', authRoutes)
 app.use('/api/events', eventRoutes)
