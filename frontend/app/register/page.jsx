@@ -19,26 +19,49 @@ export default function RegisterPage() {
   const hasMinLength = form.password.length >= 8
   const hasSpecialChar = /[0-9!@#$%^&*]/.test(form.password)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    if (form.password !== form.confirmPassword) return setError('Passwords do not match')
-    if (!agreed) return setError('Please agree to the Terms of Service')
-    setLoading(true)
-    try {
-      const res = await api.post('/api/auth/register', {
-        name: form.name,
-        email: form.email,
-        password: form.password
-      })
-      setAuth(res.data.token, res.data.user)
-      router.push('/dashboard')
-    } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong')
-    } finally {
-      setLoading(false)
+const handleSubmit = async (e) => {
+  e.preventDefault()
+  setError('')
+
+  if (form.password !== form.confirmPassword)
+    return setError('Passwords do not match')
+  if (!agreed)
+    return setError('Please agree to the Terms of Service')
+
+  setLoading(true)
+
+  try {
+    const res = await api.post('/api/auth/register', {
+      name: form.name,
+      email: form.email,
+      password: form.password
+    })
+
+    setAuth(res.data.token, res.data.user)
+
+    const pendingToken = localStorage.getItem('pendingInvitationToken')
+    if (pendingToken) {
+      try {
+        await api.post(`/api/invitations/${pendingToken}/join`)
+      } catch (e) {
+        // ignore already joined
+      }
+      localStorage.removeItem('pendingInvitationToken')
     }
+
+    const redirectTo =
+      localStorage.getItem('redirectAfterLogin') ||
+      new URLSearchParams(window.location.search).get('redirect') ||
+      '/dashboard'
+
+    localStorage.removeItem('redirectAfterLogin')
+    router.replace(redirectTo)
+  } catch (err) {
+    setError(err.response?.data?.message || 'Something went wrong')
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className="min-h-screen bg-[#F8F9FC]">

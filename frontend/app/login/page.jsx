@@ -1,7 +1,6 @@
 'use client'
 
-import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import api from '@/lib/api'
@@ -16,6 +15,11 @@ export default function LoginPage() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
+  useEffect(() => {
+    const redirect = new URLSearchParams(window.location.search).get('redirect')
+    if (redirect) localStorage.setItem('redirectAfterLogin', redirect)
+  }, [])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -23,7 +27,19 @@ export default function LoginPage() {
     try {
       const res = await api.post('/api/auth/login', form)
       setAuth(res.data.token, res.data.user)
-      router.push('/dashboard')
+
+      const pendingToken = localStorage.getItem('pendingInvitationToken')
+      if (pendingToken) {
+        try { await api.post(`/api/invitations/${pendingToken}/join`) } catch {}
+        localStorage.removeItem('pendingInvitationToken')
+      }
+
+      const redirectTo =
+        localStorage.getItem('redirectAfterLogin') ||
+        new URLSearchParams(window.location.search).get('redirect') ||
+        '/dashboard'
+      localStorage.removeItem('redirectAfterLogin')
+      router.push(redirectTo)
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials')
     } finally {
@@ -34,36 +50,41 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex bg-white">
 
-      {/* Left Panel */}
-      <div className="hidden lg:flex w-[52%] relative m-5 rounded-3xl overflow-hidden bg-blue-600">
-        <Image
-  src="/img-login.png"
-  alt="Gifting moment"
-  fill
-  className="object-cover"
-/>
-        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/80 via-blue-600/30 to-transparent" />
-        <div className="absolute bottom-8 left-8 right-8">
-          <div className="bg-white/15 backdrop-blur-md border border-white/20 rounded-2xl p-6">
-            <h2 className="text-white text-2xl font-bold mb-2 leading-tight">Effortless Gifting.</h2>
-            <p className="text-white/75 text-sm leading-relaxed mb-5">
-              Join thousands of people who use PickMyGift to transform group coordination into shared moments of delight.
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="flex -space-x-2">
-                {['#93C5FD', '#6EE7B7', '#FDE68A'].map((color, i) => (
-                  <div key={i} style={{ backgroundColor: color }} className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center">
-                    <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-                    </svg>
-                  </div>
-                ))}
-              </div>
-              <span className="text-white/80 text-xs font-medium">+2k members coordination right now</span>
+  {/* Left Panel */}
+  <div className="hidden lg:block w-[52%] flex-shrink-0 p-5">
+    <div className="relative w-full h-full rounded-3xl overflow-hidden bg-blue-600" style={{ minHeight: 'calc(100vh - 40px)' }}>
+      <img
+        src="/img-login.png"
+        alt="Gifting moment"
+        className="absolute inset-0 w-full h-full object-cover object-center"
+      />
+<div className="absolute inset-0 bg-gradient-to-t from-blue-900/70 via-transparent to-transparent" />      {/* Bottom card */}
+      <div className="absolute bottom-30 left-8 right-8">
+        <div className="bg-white/15 backdrop-blur-md border border-white/20 rounded-2xl p-6">
+          <h2 className="text-white text-2xl font-bold mb-2">Effortless Gifting.</h2>
+          <p className="text-white/75 text-sm leading-relaxed mb-5">
+            Join thousands of people who use PickMyGift to transform group coordination into shared moments of delight.
+          </p>
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {['#93C5FD', '#6EE7B7', '#FDE68A'].map((color, i) => (
+                <div
+                  key={i}
+                  style={{ backgroundColor: color }}
+                  className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center"
+                >
+                  <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                  </svg>
+                </div>
+              ))}
             </div>
+            <span className="text-white/80 text-xs font-medium">+2k members coordination right now</span>
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
       {/* Right Panel */}
       <div className="flex-1 flex flex-col justify-center px-8 lg:px-16 xl:px-20 py-12">
@@ -82,9 +103,12 @@ export default function LoginPage() {
           <h1 className="text-[28px] font-bold text-gray-900 mb-1 leading-tight">Welcome back</h1>
           <p className="text-gray-400 text-sm mb-7">Please enter your details to sign in.</p>
 
-          {/* Google */}
+          {/* Google only */}
           <button
-            onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`}
+            onClick={() => {
+              localStorage.setItem('redirectAfterLogin', new URLSearchParams(window.location.search).get('redirect') || '/dashboard')
+              window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`
+            }}
             className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-150 mb-5 shadow-sm"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -170,14 +194,18 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center gap-2 pt-1">
-              <input type="checkbox" id="remember" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"/>
+              <input
+                type="checkbox"
+                id="remember"
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
               <label htmlFor="remember" className="text-sm text-gray-600">Remember me for 30 days</label>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-2.5 rounded-xl transition-all duration-150 shadow-sm disabled:opacity-60 mt-1"
+              className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-2.5 rounded-xl transition-all duration-150 shadow-sm disabled:opacity-60"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -191,7 +219,8 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">Donn&apos;t have an account?{' '}
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Don&#39;t have an account?{' '}
             <Link href="/register" className="text-blue-600 font-semibold hover:text-blue-700 transition-colors">
               Create an account
             </Link>

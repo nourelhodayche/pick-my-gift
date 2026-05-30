@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid')
 
 const createEvent = async (req, res) => {
   try {
-    const { title, description, date, location } = req.body
+    const { title, description, date, location, eventType, guestCount, coverImage } = req.body
 
     if (!title) {
       return res.status(400).json({ message: 'Title is required' })
@@ -15,11 +15,14 @@ const createEvent = async (req, res) => {
         description,
         date: date ? new Date(date) : null,
         location,
+        eventType,
+        guestCount: guestCount ? parseInt(guestCount) : null,
+        coverImage,
         ownerId: req.user.id
       }
     })
 
-    // Auto-generate invitation token
+     // Auto-generate invitation token
     const invitation = await prisma.invitation.create({
       data: {
         token: uuidv4(),
@@ -32,6 +35,7 @@ const createEvent = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message })
   }
 }
+ 
 
 const getMyEvents = async (req, res) => {
   try {

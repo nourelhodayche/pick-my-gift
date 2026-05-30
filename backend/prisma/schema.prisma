@@ -25,6 +25,9 @@ model Event {
   description String?
   date        DateTime?
   location    String?
+  eventType   String?
+  guestCount  Int?
+  coverImage  String?
   ownerId     Int
   createdAt   DateTime       @default(now())
   owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)

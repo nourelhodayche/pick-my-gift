@@ -92,9 +92,17 @@ const getMyReservations = async (req, res) => {
     const reservations = await prisma.reservation.findMany({
       where: { userId: req.user.id },
       include: {
-        gift: true,
-        event: {
-          select: { id: true, title: true, date: true, location: true }
+        gift: {
+          include: {
+            event: {
+              select: {
+                id: true,
+                title: true,
+                date: true,
+                location: true
+              }
+            }
+          }
         }
       },
       orderBy: { createdAt: 'desc' }
