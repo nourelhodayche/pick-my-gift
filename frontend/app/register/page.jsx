@@ -67,12 +67,12 @@ const handleSubmit = async (e) => {
     <div className="min-h-screen bg-[#F8F9FC]">
 
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100">
+      {/* <nav className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100">
         <Link href="/" className="text-blue-600 font-bold text-xl tracking-tight">PickMyGift</Link>
         <Link href="/login" className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors">Login</Link>
-      </nav>
+      </nav> */}
 
-      <div className="max-w-5xl mx-auto px-4 py-10">
+      <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="flex bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
 
           {/* Left Panel */}

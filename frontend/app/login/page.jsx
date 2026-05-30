@@ -91,17 +91,27 @@ export default function LoginPage() {
         <div className="max-w-[400px] w-full mx-auto">
 
           {/* Logo */}
-          <div className="flex items-center gap-2.5 mb-10">
-            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-sm">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a4 4 0 00-4-4H6a4 4 0 00-4 4v2h4m8 0V6a4 4 0 014-4h2a4 4 0 014 4v2h-4M3 10h18"/>
-              </svg>
-            </div>
-            <span className="text-blue-600 font-bold text-xl tracking-tight">PickMyGift</span>
-          </div>
-
-          <h1 className="text-[28px] font-bold text-gray-900 mb-1 leading-tight">Welcome back</h1>
-          <p className="text-gray-400 text-sm mb-7">Please enter your details to sign in.</p>
+              <div className="px-5 pt-6 pb-5 border-b border-[#EEF1F6]">
+  <Link href="/dashboard" className="flex items-center gap-3 group">
+    <div className="w-10 h-10 rounded-xl bg-[#EEF3FF] flex items-center justify-center flex-shrink-0 overflow-hidden">
+      <img
+        src="/gift-removebg.png"
+        alt="PickMyGift-logo"
+        width={32}
+        height={32}
+        style={{ objectFit: 'contain' }}
+      />
+    </div>
+    <div className="flex flex-col">
+      <span className="text-[20px] font-bold text-[#111827] tracking-tight leading-none">
+        PickMyGift
+      </span>
+      {/* <span className="text-[11px] text-[#98A2B3] font-medium mt-1">
+        Smart Event Platform
+      </span> */}
+    </div>
+  </Link>
+</div>
 
           {/* Google only */}
           <button
