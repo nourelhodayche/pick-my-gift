@@ -40,14 +40,20 @@ const createEvent = async (req, res) => {
 const getMyEvents = async (req, res) => {
   try {
     const created = await prisma.event.findMany({
-      where: { ownerId: req.user.id },
+  where: { ownerId: req.user.id },
+  include: {
+    gifts: true,
+    invitation: true,
+    attendees: {
       include: {
-        gifts: true,
-        invitation: true,
-        _count: { select: { attendees: true } }
+        user: { select: { id: true, name: true } }
       },
-      orderBy: { createdAt: 'desc' }
-    })
+      take: 5
+    },
+    _count: { select: { attendees: true } }
+  },
+  orderBy: { createdAt: 'desc' }
+})
 
     const attendingRaw = await prisma.eventAttendee.findMany({
       where: { userId: req.user.id },
@@ -73,21 +79,26 @@ const getMyEvents = async (req, res) => {
 
 const getEventById = async (req, res) => {
   try {
-    const event = await prisma.event.findUnique({
-      where: { id: parseInt(req.params.id) },
+   const event = await prisma.event.findUnique({
+  where: { id: parseInt(req.params.id) },
+  include: {
+    owner: { select: { id: true, name: true, email: true } },
+    gifts: {
       include: {
-        owner: { select: { id: true, name: true, email: true } },
-        gifts: {
-          include: {
-            reservation: {
-              include: { user: { select: { id: true, name: true } } }
-            }
-          }
-        },
-        invitation: true,
-        _count: { select: { attendees: true } }
+        reservation: {
+          include: { user: { select: { id: true, name: true } } }
+        }
       }
-    })
+    },
+    invitation: true,
+    attendees: {
+      include: {
+        user: { select: { id: true, name: true, email: true } }
+      }
+    },
+    _count: { select: { attendees: true } }
+  }
+})
 
     if (!event) {
       return res.status(404).json({ message: 'Event not found' })
